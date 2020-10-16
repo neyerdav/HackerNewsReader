@@ -1,5 +1,7 @@
 package dev.neyerdav.hackernewsreader;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -12,9 +14,11 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class DownloadTask extends AsyncTask<String, Void, String> {
+
+    SQLiteDatabase articleDB;
+
     @Override
     protected String doInBackground(String... urls) {
-
         String result = "";
         URL url;
         HttpURLConnection urlConnection = null;
@@ -39,6 +43,7 @@ public class DownloadTask extends AsyncTask<String, Void, String> {
                 numberOfItems = jsonArray.length();
             }
 
+            articleDB.execSQL("DELETE FROM articles");
             for (int i = 0; i < numberOfItems; i++) {
                 String articleId = jsonArray.getString(i);
                 url = new URL("https://hacker-news.firebaseio.com/v0/item/" + articleId + ".json?print=pretty");
@@ -55,7 +60,7 @@ public class DownloadTask extends AsyncTask<String, Void, String> {
                     data = inputStreamReader.read();
                 }
                 JSONObject jsonObject = new JSONObject(articleInfo);
-                if(!jsonObject.isNull("title") && !jsonObject.isNull("url")) {
+                if (!jsonObject.isNull("title") && !jsonObject.isNull("url")) {
                     String articleTitle = jsonObject.getString("title");
                     String articleUrl = jsonObject.getString("url");
 
@@ -70,14 +75,18 @@ public class DownloadTask extends AsyncTask<String, Void, String> {
                         articleContent += current;
                         data = inputStreamReader.read();
                     }
-                    Log.i("HTML", articleContent);
+                    String sql = "INSERT INTO articles (articleID, title, content) VALUES (?, ?, ?)";
+                    SQLiteStatement statement = articleDB.compileStatement(sql);
+                    statement.bindString(1, articleId);
+                    statement.bindString(2, articleTitle);
+                    statement.bindString(1, articleContent);
+                    statement.execute();
                 }
             }
             Log.i("URL Content", result);
             return result;
         } catch (Exception e) {
             e.printStackTrace();
-            ;
         }
         return null;
     }
