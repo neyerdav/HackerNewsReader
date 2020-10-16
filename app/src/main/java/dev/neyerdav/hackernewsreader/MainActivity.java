@@ -18,6 +18,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        DownloadTask task = new DownloadTask();
+        try{
+            task.execute("https://hacker-news.firebaseio.com/v0/topstories.json?print=pretty");
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+
         ListView listView = findViewById(R.id.listView);
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, titles);
         listView.setAdapter(arrayAdapter);
